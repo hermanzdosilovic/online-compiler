@@ -1,0 +1,152 @@
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Compiler</title>
+</head>
+
+<body style="background-color: #eee; font-family: monospace; margin: 8px;" >
+    <h2>Online Compiler<sub style="font-size: small;"> Powered by <a href="https://bit.ly/2UCsWRM">Judge0</a></sub></h2>
+
+    <h4>Source Code</h4>
+    <textarea id="source" style="width: calc(50% - 8px); height: 50%; resize: vertical;">
+#include <iostream>
+#include <string>
+
+#pragma message "Hello from compilation!"
+
+int main()
+{
+    std::string name;
+    std::cin >> name;
+
+    std::cout << "Hi " << name << "!\n";
+    std::cerr << "This is a dummy error message " << name << ".\n";
+    std::cout << "But don't worry " << name << ", everything is fine! :)\n";
+
+    return 0;
+}
+</textarea>
+
+    <h4>Language</h4>
+    <select id="lang">
+        <option>Bash</option>
+        <option>C#</option>
+        <option selected>C++</option>
+        <option>C</option>
+        <option>Java</option>
+        <option>Python</option>
+        <option>Ruby</option>
+    </select>
+
+    <h4>Input</h4>
+    <textarea id="input" style="width: calc(50% - 8px); height: 10%; resize: vertical;">John</textarea>
+
+    </br></br>
+    <button id="run" onclick="run()">Run (Ctrl + Enter)</button>
+
+    <p style="width: 50%; text-align: center; position: absolute; color: #aaa;">Source code available on <a style="color: #999; font-weight: bold;" href="https://github.com/hermanzdosilovic/online-compiler">GitHub</a>.</p>
+
+    <textarea readonly id="output" style="width: 50%; height: 100%; position: fixed; top: 0; right: 0; resize: none;"></textarea>
+
+    <script type="text/javascript">
+        API_KEY = ""; // Get yours for free at https://rapidapi.com/hermanzdosilovic/api/judge0
+
+        var language_to_id = {
+            "Bash": 46,
+            "C": 50,
+            "C#": 51,
+            "C++": 54,
+            "Java": 62,
+            "Python": 71,
+            "Ruby": 72
+        };
+
+        function encode(str) {
+            return btoa(unescape(encodeURIComponent(str || "")));
+        }
+
+        function decode(bytes) {
+            var escaped = escape(atob(bytes || ""));
+            try {
+                return decodeURIComponent(escaped);
+            } catch {
+                return unescape(escaped);
+            }
+        }
+
+        function errorHandler(jqXHR, textStatus, errorThrown) {
+            $("#output").val(`${JSON.stringify(jqXHR, null, 4)}`);
+            $("#run").prop("disabled", false);
+        }
+
+        function check(token) {
+            $("#output").val($("#output").val() + "\nChecking submission status...");
+            $.ajax({
+                url: `https://judge0.p.rapidapi.com/submissions/${token}?base64_encoded=true`,
+                type: "GET",
+                headers: {
+                    "x-rapidapi-host": "judge0.p.rapidapi.com",
+	                "x-rapidapi-key": API_KEY
+                },
+                success: function (data, textStatus, jqXHR) {
+                    if ([1, 2].includes(data["status"]["id"])) {
+                        $("#output").val($("#output").val() + "\nStatus: " + data["status"]["description"]);
+                        setTimeout(function() { check(token) }, 1000);
+                    }
+                    else {
+                        var output = [decode(data["compile_output"]), decode(data["stdout"])].join("\n").trim();
+                        $("#output").val(output);
+                        $("#run").prop("disabled", false);
+                    }
+                },
+                error: errorHandler
+            });
+        }
+
+        function run() {
+            $("#run").prop("disabled", true);
+            $("#output").val("Creating submission...");
+            $.ajax({
+                url: "https://judge0.p.rapidapi.com/submissions?base64_encoded=true",
+                type: "POST",
+                contentType: "application/json",
+                headers: {
+                    "x-rapidapi-host": "judge0.p.rapidapi.com",
+	                "x-rapidapi-key": API_KEY
+                },
+                data: JSON.stringify({
+                    "language_id": language_to_id[$("#lang").val()],
+                    "source_code": encode($("#source").val()),
+                    "stdin": encode($("#input").val()),
+                    "redirect_stderr_to_stdout": true
+                }),
+                success: function(data, textStatus, jqXHR) {
+                    $("#output").val($("#output").val() + "\nSubmission created.");
+                    setTimeout(function() { check(data["token"]) }, 1000);
+                },
+                error: errorHandler
+            });
+        }
+
+        $("body").keydown(function (e) {
+            if (e.ctrlKey && e.keyCode == 13) {
+                run();
+            }
+        });
+
+        $("textarea").keydown(function (e) {
+            if (e.keyCode == 9) {
+                e.preventDefault();
+                var start = this.selectionStart;
+                var end = this.selectionEnd;
+
+                var append = "    ";
+                $(this).val($(this).val().substring(0, start) + append + $(this).val().substring(end));
+
+                this.selectionStart = this.selectionEnd = start + append.length;
+            }
+        });
+
+        $("#source").focus();
+    </script>
+</body>
