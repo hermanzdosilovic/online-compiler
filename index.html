@@ -1,5 +1,6 @@
 <head>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="js/jszip.min.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Online Compiler</title>
 </head>
@@ -9,29 +10,17 @@
 
     <h4>Source Code</h4>
     <textarea id="source" style="width: calc(50% - 8px); height: 50%; resize: vertical;">
-#include <iostream>
-#include <string>
-
-#pragma message "Hello from compilation!"
-
-int main()
-{
-    std::string name;
-    std::cin >> name;
-
-    std::cout << "Hi " << name << "!\n";
-    std::cerr << "This is a dummy error message " << name << ".\n";
-    std::cout << "But don't worry " << name << ", everything is fine! :)\n";
-
-    return 0;
-}
+ls -la
+echo
+cat hello.txt
+/usr/bin/python test.py
 </textarea>
 
     <h4>Language</h4>
     <select id="lang">
-        <option>Bash</option>
+        <option selected>Bash</option>
         <option>C#</option>
-        <option selected>C++</option>
+        <option>C++</option>
         <option>C</option>
         <option>Java</option>
         <option>Python</option>
@@ -39,7 +28,7 @@ int main()
     </select>
 
     <h4>Input</h4>
-    <textarea id="input" style="width: calc(50% - 8px); height: 10%; resize: vertical;">John</textarea>
+    <textarea id="input" style="width: calc(50% - 8px); height: 10%; resize: vertical;"></textarea>
 
     </br></br>
     <button id="run" onclick="run()">Run (Ctrl + Enter)</button>
@@ -104,27 +93,34 @@ int main()
         }
 
         function run() {
-            $("#run").prop("disabled", true);
-            $("#output").val("Creating submission...");
-            $.ajax({
-                url: "https://judge0.p.rapidapi.com/submissions?base64_encoded=true",
-                type: "POST",
-                contentType: "application/json",
-                headers: {
-                    "x-rapidapi-host": "judge0.p.rapidapi.com",
-	                "x-rapidapi-key": API_KEY
-                },
-                data: JSON.stringify({
-                    "language_id": language_to_id[$("#lang").val()],
-                    "source_code": encode($("#source").val()),
-                    "stdin": encode($("#input").val()),
-                    "redirect_stderr_to_stdout": true
-                }),
-                success: function(data, textStatus, jqXHR) {
-                    $("#output").val($("#output").val() + "\nSubmission created.");
-                    setTimeout(function() { check(data["token"]) }, 1000);
-                },
-                error: errorHandler
+            var zip = new JSZip();
+            zip.file("hello.txt", "This is the content of hello.txt file.\n");
+            zip.file("test.py", 'print("hello, from Python script")');
+
+            zip.generateAsync({type: "base64"}).then(function(content) {
+                $("#run").prop("disabled", true);
+                $("#output").val("Creating submission...");
+                $.ajax({
+                    url: "https://judge0.p.rapidapi.com/submissions?base64_encoded=true",
+                    type: "POST",
+                    contentType: "application/json",
+                    headers: {
+                        "x-rapidapi-host": "judge0.p.rapidapi.com",
+                        "x-rapidapi-key": API_KEY
+                    },
+                    data: JSON.stringify({
+                        "language_id": language_to_id[$("#lang").val()],
+                        "source_code": encode($("#source").val()),
+                        "stdin": encode($("#input").val()),
+                        "additional_files": content,
+                        "redirect_stderr_to_stdout": true
+                    }),
+                    success: function(data, textStatus, jqXHR) {
+                        $("#output").val($("#output").val() + "\nSubmission created.");
+                        setTimeout(function() { check(data["token"]) }, 1000);
+                    },
+                    error: errorHandler
+                });
             });
         }
 
