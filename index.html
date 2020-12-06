@@ -49,7 +49,7 @@ int main()
     <textarea readonly id="output" style="width: 50%; height: 100%; position: fixed; top: 0; right: 0; resize: none;"></textarea>
 
     <script type="text/javascript">
-        API_KEY = ""; // Get yours for free at https://rapidapi.com/hermanzdosilovic/api/judge0
+        API_KEY = ""; // Get yours for free at https://judge0.com/ce or https://judge0.com/extra-ce
 
         var language_to_id = {
             "Bash": 46,
@@ -82,10 +82,10 @@ int main()
         function check(token) {
             $("#output").val($("#output").val() + "\nChecking submission status...");
             $.ajax({
-                url: `https://judge0.p.rapidapi.com/submissions/${token}?base64_encoded=true`,
+                url: `https://judge0-ce.p.rapidapi.com/submissions/${token}?base64_encoded=true`,
                 type: "GET",
                 headers: {
-                    "x-rapidapi-host": "judge0.p.rapidapi.com",
+                    "x-rapidapi-host": "judge0-ce.p.rapidapi.com",
 	                "x-rapidapi-key": API_KEY
                 },
                 success: function (data, textStatus, jqXHR) {
@@ -107,11 +107,11 @@ int main()
             $("#run").prop("disabled", true);
             $("#output").val("Creating submission...");
             $.ajax({
-                url: "https://judge0.p.rapidapi.com/submissions?base64_encoded=true",
+                url: "https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true",
                 type: "POST",
                 contentType: "application/json",
                 headers: {
-                    "x-rapidapi-host": "judge0.p.rapidapi.com",
+                    "x-rapidapi-host": "judge0-ce.p.rapidapi.com",
 	                "x-rapidapi-key": API_KEY
                 },
                 data: JSON.stringify({
