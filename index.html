@@ -80,7 +80,7 @@ int main()
         }
 
         function check(token) {
-            $("#output").val($("#output").val() + "\nChecking submission status...");
+            $("#output").val($("#output").val() + "\n⏬ Checking submission status...");
             $.ajax({
                 url: `https://judge0-ce.p.rapidapi.com/submissions/${token}?base64_encoded=true`,
                 type: "GET",
@@ -90,7 +90,7 @@ int main()
                 },
                 success: function (data, textStatus, jqXHR) {
                     if ([1, 2].includes(data["status"]["id"])) {
-                        $("#output").val($("#output").val() + "\nStatus: " + data["status"]["description"]);
+                        $("#output").val($("#output").val() + "\nℹ️ Status: " + data["status"]["description"]);
                         setTimeout(function() { check(token) }, 1000);
                     }
                     else {
@@ -105,9 +105,9 @@ int main()
 
         function run() {
             $("#run").prop("disabled", true);
-            $("#output").val("Creating submission...");
+            $("#output").val("⚙️ Creating submission...");
             $.ajax({
-                url: "https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true",
+                url: "https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&wait=false",
                 type: "POST",
                 contentType: "application/json",
                 headers: {
@@ -121,8 +121,8 @@ int main()
                     "redirect_stderr_to_stdout": true
                 }),
                 success: function(data, textStatus, jqXHR) {
-                    $("#output").val($("#output").val() + "\nSubmission created.");
-                    setTimeout(function() { check(data["token"]) }, 1000);
+                    $("#output").val($("#output").val() + "\n🎉 Submission created.");
+                    setTimeout(function() { check(data["token"]) }, 2000);
                 },
                 error: errorHandler
             });
