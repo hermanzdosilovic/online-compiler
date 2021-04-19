@@ -5,10 +5,10 @@
 </head>
 
 <body style="background-color: #eee; font-family: monospace; margin: 8px;" >
-    <h2>Online Compiler<sub style="font-size: small;"> Powered by <a href="https://bit.ly/2UCsWRM">Judge0</a></sub></h2>
+    <h2>🔥 Online Compiler<sub><small> Powered by <a href="https://bit.ly/2UCsWRM">Judge0</a></small></sub></h2>
 
     <h4>Source Code</h4>
-    <textarea id="source" style="width: calc(50% - 8px); height: 50%; resize: vertical;">
+    <textarea id="source" style="width: calc(50% - 8px); height: 40%; resize: vertical;">
 #include <iostream>
 #include <string>
 
@@ -41,10 +41,13 @@ int main()
     <h4>Input</h4>
     <textarea id="input" style="width: calc(50% - 8px); height: 10%; resize: vertical;">John</textarea>
 
-    </br></br>
-    <button id="run" onclick="run()">Run (Ctrl + Enter)</button>
+    <h4>Expected Output<sub><small>(optional)</small></sub></h4>
+    <textarea id="expected-output" style="width: calc(50% - 8px); height: 10%; resize: vertical;"></textarea>
 
-    <p style="width: 50%; text-align: center; position: absolute; color: #aaa;">Source code available on <a style="color: #999; font-weight: bold;" href="https://github.com/hermanzdosilovic/online-compiler">GitHub</a>.</p>
+    </br></br>
+    <button id="run" onclick="run()">▶️ Run (Ctrl + Enter)</button>
+
+    <small style="width: 50%; text-align: center; color: #ccc;">Source code available on <a style="color: #bbb; font-weight: bold;" href="https://github.com/hermanzdosilovic/online-compiler">GitHub</a>.</p>
 
     <textarea readonly id="output" style="width: 50%; height: 100%; position: fixed; top: 0; right: 0; resize: none;"></textarea>
 
@@ -95,7 +98,7 @@ int main()
                     }
                     else {
                         var output = [decode(data["compile_output"]), decode(data["stdout"])].join("\n").trim();
-                        $("#output").val(output);
+                        $("#output").val(`${data["status"]["id"] != "3" ? "🔴" : "🟢"} ${data["status"]["description"]}\n${output}`);
                         $("#run").prop("disabled", false);
                     }
                 },
@@ -106,6 +109,12 @@ int main()
         function run() {
             $("#run").prop("disabled", true);
             $("#output").val("⚙️ Creating submission...");
+
+            let encodedExpectedOutput = encode($("#expected-output").val());
+            if (encodedExpectedOutput === "") {
+                encodedExpectedOutput = null; // Assume that user does not want to use expected output if it is empty.
+            }
+
             $.ajax({
                 url: "https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&wait=false",
                 type: "POST",
@@ -118,6 +127,7 @@ int main()
                     "language_id": language_to_id[$("#lang").val()],
                     "source_code": encode($("#source").val()),
                     "stdin": encode($("#input").val()),
+                    "expected_output": encodedExpectedOutput,
                     "redirect_stderr_to_stdout": true
                 }),
                 success: function(data, textStatus, jqXHR) {
